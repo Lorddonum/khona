@@ -93,8 +93,8 @@ export const getContacts = (params) => api.get('/contact', { params });
 export const markContactRead = (id) => api.put(`/contact/${id}/read`);
 export const deleteContact = (id) => api.delete(`/contact/${id}`);
 
-// Checkout
-export const createCheckoutSession = (data) => api.post('/checkout/create-session', data);
-export const getOrderBySession = (sessionId) => api.get(`/checkout/success/${sessionId}`);
+// Checkout (CMI)
+export const initiateCmiPayment = (data) => api.post('/checkout/initiate', data, { responseType: 'text' });
+export const getOrderById = (orderId) => api.get(`/checkout/success/${orderId}`);
 
 export default api;
