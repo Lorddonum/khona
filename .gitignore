@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contain secrets)
+.env
+.env.local
+.env.production
+
+# Build output (rebuilt on server)
+client/dist/
+
+# Uploads (user-generated content, stays on server)
+server/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+*.swp
+*.swo
+.gemini/

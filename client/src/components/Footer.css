@@ -1,0 +1,129 @@
+.footer {
+  position: relative;
+  background: var(--color-surface2);
+  border-top: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.footer__glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 200px;
+  background: radial-gradient(ellipse at center, var(--color-hover) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.footer__inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem;
+  padding: 4rem 0;
+}
+
+.footer__brand {}
+
+.footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer__logo img {
+  height: 32px;
+  width: auto;
+}
+
+.footer__logo span {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+}
+
+.footer__tagline {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+.footer__section {}
+
+.footer__heading {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 1.25rem;
+}
+
+.footer__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer__links a {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.footer__links a:hover {
+  color: var(--color-primary);
+  padding-left: 4px;
+}
+
+[dir="rtl"] .footer__links a:hover {
+  padding-left: 0;
+  padding-right: 4px;
+}
+
+.footer__social {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  transition: var(--transition);
+}
+
+.footer__social-link:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-hover);
+  transform: translateY(-2px);
+}
+
+.footer__bottom {
+  border-top: 1px solid var(--color-border);
+  padding: 1.25rem 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2.5rem 0;
+  }
+
+  .footer__tagline { max-width: 100%; }
+}

@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "products": "Produits",
+    "about": "À Propos",
+    "contact": "Contact",
+    "cart": "Panier",
+    "admin": "Admin"
+  },
+  "home": {
+    "hero_title": "Illuminez Votre Monde",
+    "hero_subtitle": "Des solutions d'éclairage premium alliant élégance et précision",
+    "hero_cta": "Explorer les Produits",
+    "featured_title": "Produits Vedettes",
+    "featured_subtitle": "Nos pièces d'éclairage les plus prisées",
+    "contact_title": "Contactez-Nous",
+    "contact_subtitle": "Nous serions ravis de vous entendre"
+  },
+  "products": {
+    "title": "Notre Collection",
+    "subtitle": "Découvrez notre gamme complète d'éclairage premium",
+    "all_categories": "Toutes les Catégories",
+    "search_placeholder": "Rechercher des produits...",
+    "no_products": "Aucun produit trouvé",
+    "add_to_cart": "Ajouter au Panier",
+    "view_details": "Voir les Détails",
+    "price": "Prix",
+    "quantity": "Quantité",
+    "in_stock": "En Stock",
+    "out_of_stock": "Rupture de Stock"
+  },
+  "about": {
+    "title": "À Propos de Khona",
+    "subtitle": "Un héritage de lumière et d'artisanat",
+    "mission_title": "Notre Mission",
+    "mission_text": "Chez Khona, nous croyons que l'éclairage est plus qu'une illumination — c'est un art. Depuis notre fondation, nous nous consacrons à créer des luminaires qui transforment les espaces et inspirent l'émotion.",
+    "values_title": "Nos Valeurs",
+    "quality": "Qualité",
+    "quality_text": "Chaque pièce est fabriquée selon les normes les plus élevées",
+    "innovation": "Innovation",
+    "innovation_text": "Nous allions tradition et technologie moderne",
+    "service": "Service",
+    "service_text": "Accompagnement dédié de la sélection à l'installation"
+  },
+  "contact": {
+    "title": "Contactez-Nous",
+    "subtitle": "Contactez-nous et nous répondrons rapidement",
+    "name": "Nom Complet",
+    "email": "Adresse Email",
+    "phone": "Numéro de Téléphone",
+    "message": "Votre Message",
+    "send": "Envoyer le Message",
+    "success": "Message envoyé ! Nous vous contacterons bientôt.",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "cart": {
+    "title": "Votre Panier",
+    "empty": "Votre panier est vide",
+    "subtotal": "Sous-total",
+    "checkout": "Procéder au Paiement",
+    "remove": "Supprimer",
+    "continue_shopping": "Continuer les Achats"
+  },
+  "footer": {
+    "tagline": "Éclairage Premium pour Espaces Exceptionnels",
+    "rights": "Tous droits réservés",
+    "links": "Liens Rapides",
+    "follow": "Suivez-Nous"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter"
+  }
+}
