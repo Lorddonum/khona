@@ -73,6 +73,9 @@ export const createProduct = (data) => api.post('/products', data);
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 export const deleteProduct = (id) => api.delete(`/products/${id}`);
 
+// Auth
+export const registerUser = (data) => api.post('/auth/register', data);
+
 // Categories
 export const getCategories = () => api.get('/categories');
 export const getCategory = (id) => api.get(`/categories/${id}`);
@@ -93,8 +96,8 @@ export const getContacts = (params) => api.get('/contact', { params });
 export const markContactRead = (id) => api.put(`/contact/${id}/read`);
 export const deleteContact = (id) => api.delete(`/contact/${id}`);
 
-// Checkout (CMI)
-export const initiateCmiPayment = (data) => api.post('/checkout/initiate', data, { responseType: 'text' });
-export const getOrderById = (orderId) => api.get(`/checkout/success/${orderId}`);
+// Checkout
+export const createCheckoutSession = (data) => api.post('/checkout/create-session', data);
+export const getOrderBySession = (sessionId) => api.get(`/checkout/success/${sessionId}`);
 
 export default api;

@@ -1,136 +1,76 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 
-// ─── CMI Helpers ─────────────────────────────────────────────────────────────
-
-/**
- * CMI requires all params sorted alphabetically, concatenated as
- * "key1:value1|key2:value2|..." then HMAC-SHA512 with the store key.
- */
-function computeCmiHash(params, storeKey) {
-  const sorted = Object.keys(params)
-    .sort()
-    .filter((k) => k !== 'HASH' && params[k] !== '')
-    .map((k) => `${params[k]}`)
-    .join('|');
-
-  // CMI uses an escape-then-hash mechanism (storeKey wraps the data)
-  const hashInput = storeKey + sorted;
-  return crypto.createHmac('sha512', storeKey).update(hashInput).digest('hex').toUpperCase();
-}
-
-// ─── POST /api/checkout/initiate ─────────────────────────────────────────────
-// Frontend calls this, gets back an HTML form that auto-submits to CMI
-router.post('/initiate', async (req, res) => {
+// POST /api/checkout/create-session
+router.post('/create-session', async (req, res) => {
   try {
     const { items, customer } = req.body;
 
-    const totalAmount = items
-      .reduce((sum, i) => sum + i.price * i.quantity, 0)
-      .toFixed(2);
+    const lineItems = items.map((item) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.name,
+          images: item.image ? [item.image] : [],
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
 
-    // Create a pending order first
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${process.env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/checkout/cancel`,
+      customer_email: customer?.email,
+      metadata: { customerName: customer?.name || '' },
+    });
+
+    // Pre-create order in pending state
+    const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const order = new Order({
       customer,
       items,
       totalAmount,
-      paymentStatus: 'pending',
-      status: 'pending',
+      stripeSessionId: session.id,
     });
     await order.save();
 
-    const orderId = order._id.toString();
-    const clientId  = process.env.CMI_CLIENT_ID;
-    const storeKey  = process.env.CMI_STORE_KEY;
-    const cmiUrl    = process.env.CMI_PAYMENT_URL || 'https://payment.cmi.co.ma/fim/est3Dgate';
-    const baseUrl   = process.env.CLIENT_URL;
-
-    // All params CMI requires
-    const params = {
-      clientid:      clientId,
-      amount:        totalAmount,
-      currency:      '504',           // MAD = ISO 4217 code 504
-      oid:           orderId,
-      okUrl:         `${baseUrl}/checkout/success`,
-      failUrl:       `${baseUrl}/checkout/fail`,
-      callbackUrl:   `${baseUrl.replace('http://','https://')}/api/checkout/callback`,
-      trantype:      'PreAuth',
-      instalment:    '',
-      rnd:           Date.now().toString(),
-      lang:          'fr',
-      encoding:      'UTF-8',
-      email:         customer?.email || '',
-      BillToName:    customer?.name  || '',
-    };
-
-    params.HASH = computeCmiHash(params, storeKey);
-
-    // Build an auto-submitting HTML form (CMI only accepts POST)
-    const fields = Object.entries(params)
-      .map(([k, v]) => `<input type="hidden" name="${k}" value="${String(v).replace(/"/g, '&quot;')}" />`)
-      .join('\n');
-
-    const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Redirection vers CMI...</title></head>
-<body onload="document.forms[0].submit()">
-  <p>Redirection vers le paiement sécurisé CMI...</p>
-  <form action="${cmiUrl}" method="POST">
-    ${fields}
-  </form>
-</body>
-</html>`;
-
-    res.send(html);
+    res.json({ sessionId: session.id, url: session.url });
   } catch (err) {
-    console.error('CMI initiate error:', err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// ─── POST /api/checkout/callback (server-to-server from CMI) ─────────────────
-router.post('/callback', express.urlencoded({ extended: true }), async (req, res) => {
+// POST /api/checkout/webhook (Stripe webhook)
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
   try {
-    const params    = { ...req.body };
-    const storeKey  = process.env.CMI_STORE_KEY;
-    const receivedHash = params.HASH;
-
-    const expectedHash = computeCmiHash(params, storeKey);
-
-    if (receivedHash !== expectedHash) {
-      console.error('CMI callback: HASH mismatch');
-      return res.send('FAILURE'); // CMI expects plain text response
-    }
-
-    const { oid, Response } = params;
-
-    if (Response === 'Approved') {
-      await Order.findByIdAndUpdate(oid, {
-        paymentStatus: 'paid',
-        status: 'processing',
-        cmiResponse: params,
-      });
-      return res.send('ACTION=POSTAUTH');  // Required ACK to CMI
-    } else {
-      await Order.findByIdAndUpdate(oid, {
-        paymentStatus: 'failed',
-        status: 'cancelled',
-        cmiResponse: params,
-      });
-      return res.send('FAILURE');
-    }
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('CMI callback error:', err);
-    res.status(500).send('ERROR');
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    await Order.findOneAndUpdate(
+      { stripeSessionId: session.id },
+      { paymentStatus: 'paid', status: 'processing' }
+    );
+  }
+
+  res.json({ received: true });
 });
 
-// ─── GET /api/checkout/success/:orderId ──────────────────────────────────────
-router.get('/success/:orderId', async (req, res) => {
+// GET /api/checkout/success/:sessionId
+router.get('/success/:sessionId', async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId);
+    const order = await Order.findOne({ stripeSessionId: req.params.sessionId });
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json(order);
   } catch (err) {

@@ -21,13 +21,24 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
-  const login = async (username, password) => {
-    const res = await axios.post('/api/auth/login', { username, password });
-    const { token: t, user: u } = res.data;
+  const _persist = (t, u) => {
     localStorage.setItem('khona_token', t);
     axios.defaults.headers.common['Authorization'] = `Bearer ${t}`;
     setToken(t);
     setUser(u);
+  };
+
+  const login = async (username, password) => {
+    const res = await axios.post('/api/auth/login', { username, password });
+    const { token: t, user: u } = res.data;
+    _persist(t, u);
+    return u;
+  };
+
+  const register = async (username, email, password) => {
+    const res = await axios.post('/api/auth/register', { username, email, password });
+    const { token: t, user: u } = res.data;
+    _persist(t, u);
     return u;
   };
 
@@ -38,8 +49,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, isAdmin: !!user }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

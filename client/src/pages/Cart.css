@@ -88,3 +88,21 @@
   .cart-item { grid-template-columns: 64px 1fr auto; gap: 0.75rem; }
   .cart-item__subtotal, .cart-item__remove { display: none; }
 }
+
+.cart-auth-nudge {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.cart-auth-nudge button {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
