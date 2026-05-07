@@ -54,9 +54,55 @@ router.post('/login', async (req, res) => {
 });
 
 // GET /api/auth/me
-const { protect } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 router.get('/me', protect, (req, res) => {
   res.json(req.user);
+});
+
+// GET /api/auth/users (admin)
+router.get('/users', protect, adminOnly, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/auth/users/:id/role (admin)
+router.put('/users/:id/role', protect, adminOnly, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+    
+    // Prevent modifying superadmin
+    const userToUpdate = await User.findById(req.params.id);
+    if (!userToUpdate) return res.status(404).json({ message: 'User not found' });
+    if (userToUpdate.role === 'superadmin') return res.status(403).json({ message: 'Cannot modify superadmin' });
+    
+    userToUpdate.role = role;
+    await userToUpdate.save();
+    
+    res.json({ message: 'Role updated', user: { _id: userToUpdate._id, username: userToUpdate.username, role: userToUpdate.role } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/users/:id (admin)
+router.delete('/users/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const userToUpdate = await User.findById(req.params.id);
+    if (!userToUpdate) return res.status(404).json({ message: 'User not found' });
+    if (userToUpdate.role === 'superadmin') return res.status(403).json({ message: 'Cannot delete superadmin' });
+    
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;

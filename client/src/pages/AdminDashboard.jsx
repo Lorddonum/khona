@@ -12,6 +12,8 @@ function AdminSidebar({ onLogout }) {
     { to: '/khona-admin-secure/dashboard/categories', label: 'Categories', icon: '◉' },
     { to: '/khona-admin-secure/dashboard/orders', label: 'Orders', icon: '◎' },
     { to: '/khona-admin-secure/dashboard/messages', label: 'Messages', icon: '◇' },
+    { to: '/khona-admin-secure/dashboard/accounts', label: 'Accounts', icon: '👤' },
+    { to: '/khona-admin-secure/dashboard/analytics', label: 'Analytics', icon: '📊' },
   ];
 
   return (
@@ -502,12 +504,18 @@ function AdminOrders() {
       {loading ? <div className="page-loader"><div className="spinner" /></div> : (
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead><tr><th>Customer</th><th>Email</th><th>Total</th><th>Status</th><th>Payment</th><th>Date</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Location</th><th>Total</th><th>Status</th><th>Payment</th><th>Date</th></tr></thead>
             <tbody>
               {orders.map((o) => (
                 <tr key={o._id}>
-                  <td>{o.customer?.name}</td>
-                  <td>{o.customer?.email}</td>
+                  <td>
+                    {o.customer?.name}
+                    {o.isTestOrder && <span className="badge badge-gold" style={{ marginLeft: '0.5rem', fontSize: '0.65rem' }}>Test</span>}
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>{o.customer?.email}</div>
+                  </td>
+                  <td>
+                    {o.customer?.city && o.customer?.country ? `${o.customer.city}, ${o.customer.country}` : 'Unknown'}
+                  </td>
                   <td className="admin-table__price">{o.totalAmount?.toLocaleString()} MAD</td>
                   <td>
                     <select
@@ -590,6 +598,140 @@ function AdminMessages() {
   );
 }
 
+/* ===== Accounts panel ===== */
+function AdminAccounts() {
+  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('../lib/api').then(({ getUsers }) => {
+      getUsers().then((r) => setUsers(r.data)).catch(() => {}).finally(() => setLoading(false));
+    });
+  }, []);
+
+  const handleRoleChange = async (id, role) => {
+    try {
+      const { updateUserRole } = await import('../lib/api');
+      await updateUserRole(id, { role });
+      setUsers((u) => u.map((x) => x._id === id ? { ...x, role } : x));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update role');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this user?')) return;
+    try {
+      const { deleteUser } = await import('../lib/api');
+      await deleteUser(id);
+      setUsers((u) => u.filter((x) => x._id !== id));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  return (
+    <div className="admin-panel">
+      <div className="admin-panel__header">
+        <h2>Accounts</h2>
+        <span className="badge badge-gold">{users.length} users</span>
+      </div>
+      {loading ? <div className="page-loader"><div className="spinner" /></div> : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Registered</th><th>Actions</th></tr></thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u._id}>
+                  <td>{u.username}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    {u.role === 'superadmin' ? (
+                      <span className="badge badge-gold">Super Admin</span>
+                    ) : (
+                      <select
+                        className="admin-status-select"
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                        disabled={user?.role !== 'superadmin' && user?.role !== 'admin'}
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    )}
+                  </td>
+                  <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    {u.role !== 'superadmin' && (
+                      <button className="btn btn-danger" onClick={() => handleDelete(u._id)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== Analytics panel ===== */
+function AdminAnalytics() {
+  const [topProducts, setTopProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    import('../lib/api').then(({ getTopProducts }) => {
+      getTopProducts().then((r) => setTopProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
+    });
+  }, []);
+
+  return (
+    <div className="admin-panel">
+      <div className="admin-panel__header">
+        <h2>Analytics (Most Viewed Products)</h2>
+      </div>
+      {loading ? <div className="page-loader"><div className="spinner" /></div> : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Product</th><th>Total Views</th><th>Breakdown by Location</th></tr></thead>
+            <tbody>
+              {topProducts.length === 0 && (
+                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '2rem' }}>No view data available yet.</td></tr>
+              )}
+              {topProducts.map((p) => (
+                <tr key={p._id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <img src={p.productDetails?.images?.[0] || '/placeholder.jpg'} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                      <span>{p.productDetails?.name?.en || p.productDetails?.name?.fr}</span>
+                    </div>
+                  </td>
+                  <td><span className="badge badge-gold" style={{ fontSize: '1rem' }}>{p.totalViews}</span></td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {p.locations.map((loc, i) => (
+                        <div key={i} style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-glass)', paddingBottom: '0.2rem' }}>
+                          <span>{loc.city}, {loc.country}</span>
+                          <strong>{loc.views} views</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ===== Main Dashboard ===== */
 export default function AdminDashboard() {
   const { logout } = useAuth();
@@ -609,6 +751,8 @@ export default function AdminDashboard() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="messages" element={<AdminMessages />} />
+          <Route path="accounts" element={<AdminAccounts />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="*" element={<AdminProducts />} />
         </Routes>
       </main>

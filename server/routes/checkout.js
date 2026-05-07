@@ -37,6 +37,7 @@ router.post('/create-session', async (req, res) => {
       items,
       totalAmount,
       stripeSessionId: session.id,
+      isTestOrder: session.livemode === false,
     });
     await order.save();
 

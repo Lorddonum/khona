@@ -75,6 +75,9 @@ export const deleteProduct = (id) => api.delete(`/products/${id}`);
 
 // Auth
 export const registerUser = (data) => api.post('/auth/register', data);
+export const getUsers = () => api.get('/auth/users');
+export const updateUserRole = (id, data) => api.put(`/auth/users/${id}/role`, data);
+export const deleteUser = (id) => api.delete(`/auth/users/${id}`);
 
 // Categories
 export const getCategories = () => api.get('/categories');
@@ -99,5 +102,9 @@ export const deleteContact = (id) => api.delete(`/contact/${id}`);
 // Checkout
 export const createCheckoutSession = (data) => api.post('/checkout/create-session', data);
 export const getOrderBySession = (sessionId) => api.get(`/checkout/success/${sessionId}`);
+
+// Analytics
+export const recordProductView = (productId, data) => api.post(`/analytics/view/${productId}`, data);
+export const getTopProducts = () => api.get('/analytics/top-products');
 
 export default api;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from '../components/ProductCard';
-import { getProducts, getCategories, getProduct } from '../lib/api';
+import { getProducts, getCategories, getProduct, recordProductView } from '../lib/api';
 import { useCart } from '../context/CartContext';
 import './Products.css';
 
@@ -56,7 +56,14 @@ export default function Products() {
     if (!id) { setDetail(null); return; }
     setDetailLoading(true);
     getProduct(id)
-      .then((r) => setDetail(r.data))
+      .then((r) => {
+        setDetail(r.data);
+        // Record analytics view asynchronously
+        fetch('https://ipapi.co/json/')
+          .then(res => res.json())
+          .then(loc => recordProductView(id, { country: loc.country_name, city: loc.city }))
+          .catch(() => recordProductView(id, { country: 'Unknown', city: 'Unknown' }));
+      })
       .catch(() => navigate('/products'))
       .finally(() => setDetailLoading(false));
   }, [id]);

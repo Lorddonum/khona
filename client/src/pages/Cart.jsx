@@ -28,7 +28,24 @@ export default function Cart() {
         quantity: i.qty,
         image: i.images?.[0] || '',
       }));
-      const customer = { name: user.username || user.name, email: user.email };
+      let city = 'Unknown';
+      let country = 'Unknown';
+      try {
+        const locRes = await fetch('https://ipapi.co/json/');
+        const locData = await locRes.json();
+        if (locData.city) city = locData.city;
+        if (locData.country_name) country = locData.country_name;
+      } catch (err) {
+        console.warn('Could not fetch location:', err);
+      }
+
+      const customer = { 
+        name: user.username || user.name, 
+        email: user.email,
+        city,
+        country
+      };
+      
       const res = await createCheckoutSession({ items, customer });
       window.location.href = res.data.url;
     } catch (err) {

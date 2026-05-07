@@ -14,9 +14,12 @@ const orderSchema = new mongoose.Schema({
     email: { type: String, required: true },
     phone: String,
     address: String,
+    city: String,
+    country: String,
   },
   items: [orderItemSchema],
   totalAmount: { type: Number, required: true },
+  isTestOrder: { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
