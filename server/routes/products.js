@@ -53,6 +53,7 @@ router.post('/', protect, adminOnly, upload.array('images', 10), async (req, res
     const name = JSON.parse(req.body.name);
     const description = req.body.description ? JSON.parse(req.body.description) : {};
     const specifications = req.body.specifications ? JSON.parse(req.body.specifications) : [];
+    const models = req.body.models ? JSON.parse(req.body.models) : [];
     const promotion = req.body.promotion ? JSON.parse(req.body.promotion) : { active: false, discountPercent: 0 };
     const images = req.files ? req.files.map((f) => `/uploads/${f.filename}`) : [];
 
@@ -60,6 +61,7 @@ router.post('/', protect, adminOnly, upload.array('images', 10), async (req, res
       name,
       description,
       specifications,
+      models,
       price: Number(price),
       quantity: Number(quantity),
       category,
@@ -85,6 +87,7 @@ router.put('/:id', protect, adminOnly, upload.array('images', 10), async (req, r
     if (req.body.name) updates.name = JSON.parse(req.body.name);
     if (req.body.description) updates.description = JSON.parse(req.body.description);
     if (req.body.specifications) updates.specifications = JSON.parse(req.body.specifications);
+    if (req.body.models) updates.models = JSON.parse(req.body.models);
     if (req.body.price) updates.price = Number(req.body.price);
     if (req.body.quantity !== undefined) updates.quantity = Number(req.body.quantity);
     if (req.body.category) updates.category = req.body.category;

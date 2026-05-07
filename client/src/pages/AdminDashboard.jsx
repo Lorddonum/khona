@@ -53,7 +53,12 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
     isNewProduct: initialData?.isNewProduct || false, isHotSelling: initialData?.isHotSelling || false,
     promoActive: initialData?.promotion?.active || false, promoDiscount: initialData?.promotion?.discountPercent || '',
   });
-  const [specs, setSpecs] = useState(initialData?.specifications || []);
+  const [models, setModels] = useState(
+    initialData?.models?.length > 0 
+      ? initialData.models 
+      : [{ name: 'Default', specifications: initialData?.specifications || [] }]
+  );
+  const [activeModel, setActiveModel] = useState(0);
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState(initialData?.images || []);
   const [existingImages, setExistingImages] = useState(initialData?.images || []);
@@ -65,10 +70,26 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
     setForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const addSpec = () => setSpecs((s) => [...s, { key: '', value: '' }]);
-  const removeSpec = (i) => setSpecs((s) => s.filter((_, idx) => idx !== i));
-  const updateSpec = (i, field, val) => {
-    setSpecs((s) => s.map((sp, idx) => idx === i ? { ...sp, [field]: val } : sp));
+  const addModel = () => {
+    setModels((m) => [...m, { name: `Variant ${m.length + 1}`, specifications: [] }]);
+    setActiveModel(models.length);
+  };
+  const removeModel = (i) => {
+    setModels((m) => m.filter((_, idx) => idx !== i));
+    setActiveModel(0);
+  };
+  const updateModelName = (i, name) => setModels((m) => m.map((mod, idx) => idx === i ? { ...mod, name } : mod));
+  
+  const addSpec = (mi) => setModels((m) => m.map((mod, idx) => idx === mi ? { ...mod, specifications: [...mod.specifications, { key: '', value: '' }] } : mod));
+  const removeSpec = (mi, si) => setModels((m) => m.map((mod, idx) => idx === mi ? { ...mod, specifications: mod.specifications.filter((_, sidx) => sidx !== si) } : mod));
+  const updateSpec = (mi, si, field, val) => {
+    setModels((m) => m.map((mod, idx) => {
+      if (idx !== mi) return mod;
+      return {
+        ...mod,
+        specifications: mod.specifications.map((sp, sidx) => sidx === si ? { ...sp, [field]: val } : sp)
+      };
+    }));
   };
 
   const handleImages = (e) => {
@@ -104,7 +125,18 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
       const fd = new FormData();
       fd.append('name', JSON.stringify({ en: form.nameEn, fr: form.nameFr, ar: form.nameAr }));
       fd.append('description', JSON.stringify({ en: form.descEn, fr: form.descFr, ar: form.descAr }));
-      fd.append('specifications', JSON.stringify(specs.filter((s) => s.key && s.value)));
+      
+      const cleanedModels = models.map(m => ({
+        name: m.name,
+        specifications: m.specifications.filter(s => s.key && s.value)
+      })).filter(m => m.name.trim() !== '');
+      fd.append('models', JSON.stringify(cleanedModels));
+      
+      if (cleanedModels.length > 0) {
+        fd.append('specifications', JSON.stringify(cleanedModels[0].specifications));
+      } else {
+        fd.append('specifications', JSON.stringify([]));
+      }
       fd.append('price', form.price);
       fd.append('quantity', form.quantity || '0');
       fd.append('category', form.category);
@@ -228,17 +260,52 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
             )}
           </div>
 
-          {/* Specifications */}
-          <p className="product-form__section-title">Specifications</p>
-          <div className="spec-rows">
-            {specs.map((s, i) => (
-              <div className="spec-row" key={i}>
-                <input className="form-input" placeholder="Name (e.g. Wattage)" value={s.key} onChange={(e) => updateSpec(i, 'key', e.target.value)} />
-                <input className="form-input" placeholder="Value (e.g. 60W)" value={s.value} onChange={(e) => updateSpec(i, 'value', e.target.value)} />
-                <button type="button" className="spec-row__remove" onClick={() => removeSpec(i)}>×</button>
+          {/* Models & Specifications */}
+          <p className="product-form__section-title">Models & Specifications</p>
+          <div className="models-tabs">
+            <div className="models-tabs__header" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+              {models.map((m, i) => (
+                <button 
+                  type="button" 
+                  key={i} 
+                  className={`btn ${activeModel === i ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                  onClick={() => setActiveModel(i)}
+                >
+                  {m.name || `Model ${i+1}`}
+                </button>
+              ))}
+              <button type="button" className="btn btn-ghost" onClick={addModel} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>+ Add Model</button>
+            </div>
+
+            {models.length > 0 && activeModel < models.length && (
+              <div className="model-content" style={{ background: 'var(--color-glass)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
+                  <label className="form-label" style={{ margin: 0 }}>Model Name:</label>
+                  <input 
+                    className="form-input" 
+                    value={models[activeModel].name} 
+                    onChange={(e) => updateModelName(activeModel, e.target.value)} 
+                    style={{ flex: 1 }} 
+                    placeholder="e.g. 60cm Version"
+                  />
+                  {models.length > 1 && (
+                    <button type="button" className="btn btn-danger" onClick={() => removeModel(activeModel)}>Delete Model</button>
+                  )}
+                </div>
+
+                <div className="spec-rows">
+                  {models[activeModel].specifications.map((s, i) => (
+                    <div className="spec-row" key={i}>
+                      <input className="form-input" placeholder="Name (e.g. Wattage)" value={s.key} onChange={(e) => updateSpec(activeModel, i, 'key', e.target.value)} />
+                      <input className="form-input" placeholder="Value (e.g. 60W)" value={s.value} onChange={(e) => updateSpec(activeModel, i, 'value', e.target.value)} />
+                      <button type="button" className="spec-row__remove" onClick={() => removeSpec(activeModel, i)}>×</button>
+                    </div>
+                  ))}
+                  <button type="button" className="spec-add-btn" onClick={() => addSpec(activeModel)}>+ Add specification</button>
+                </div>
               </div>
-            ))}
-            <button type="button" className="spec-add-btn" onClick={addSpec}>+ Add specification</button>
+            )}
           </div>
 
           {/* Images */}

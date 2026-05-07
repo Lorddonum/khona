@@ -15,25 +15,29 @@ export function CartProvider({ children }) {
     localStorage.setItem('khona_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, selectedModel = null) => {
     setCartItems((prev) => {
-      const existing = prev.find((i) => i._id === product._id);
+      const cartItemId = selectedModel ? `${product._id}-${selectedModel}` : product._id;
+      const existing = prev.find((i) => i.cartItemId === cartItemId || (!i.cartItemId && i._id === product._id && !selectedModel));
+      
       if (existing) {
         return prev.map((i) =>
-          i._id === product._id ? { ...i, qty: i.qty + quantity } : i
+          (i.cartItemId === cartItemId || (!i.cartItemId && i._id === product._id && !selectedModel)) 
+            ? { ...i, qty: i.qty + quantity } 
+            : i
         );
       }
-      return [...prev, { ...product, qty: quantity }];
+      return [...prev, { ...product, qty: quantity, selectedModel, cartItemId }];
     });
   };
 
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((i) => i._id !== id));
+  const removeFromCart = (idOrCartItemId) => {
+    setCartItems((prev) => prev.filter((i) => (i.cartItemId || i._id) !== idOrCartItemId));
   };
 
-  const updateQty = (id, qty) => {
-    if (qty < 1) return removeFromCart(id);
-    setCartItems((prev) => prev.map((i) => (i._id === id ? { ...i, qty } : i)));
+  const updateQty = (idOrCartItemId, qty) => {
+    if (qty < 1) return removeFromCart(idOrCartItemId);
+    setCartItems((prev) => prev.map((i) => ((i.cartItemId || i._id) === idOrCartItemId ? { ...i, qty } : i)));
   };
 
   const clearCart = () => setCartItems([]);

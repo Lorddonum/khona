@@ -10,16 +10,32 @@ function MinimalProductCard({ product }) {
   const lang = i18n.language;
   const name = product.name?.[lang] || product.name?.en || product.title || 'Unnamed';
   
+  const isPromo = product.promotion?.active;
+  const discount = product.promotion?.discountPercent || 0;
+  const finalPrice = isPromo ? (product.price * (1 - discount / 100)) : product.price;
+
   return (
     <div className="product-card minimal-card">
-      <Link to={`/products/${product._id}`} className="product-card__img-wrap">
+      <Link to={`/products/${product._id}`} className="product-card__img-wrap" style={{ position: 'relative' }}>
         <img src={product.images?.[0] || '/placeholder.jpg'} alt={name} className="product-card__img" />
+        {isPromo && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'var(--color-gold)', color: '#000', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            -{discount}%
+          </div>
+        )}
       </Link>
       <div className="product-card__info" style={{ textAlign: 'center', padding: '1rem' }}>
         <Link to={`/products/${product._id}`}>
           <h3 className="product-card__name" style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{name}</h3>
         </Link>
-        <p className="product-card__price">{product.price?.toLocaleString()} MAD</p>
+        <p className="product-card__price">
+          {isPromo && (
+            <span style={{ textDecoration: 'line-through', color: 'var(--color-muted)', fontSize: '0.9rem', marginRight: '0.5rem' }}>
+              {product.price?.toLocaleString()} MAD
+            </span>
+          )}
+          <span>{finalPrice.toLocaleString()} MAD</span>
+        </p>
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ export default function Cart() {
         name: i.name?.[lang] || i.name?.en,
         price: i.price,
         quantity: i.qty,
+        selectedModel: i.selectedModel,
         image: i.images?.[0] || '',
       }));
       let city = 'Unknown';
@@ -74,22 +75,24 @@ export default function Cart() {
             <div className="cart-items">
               {cartItems.map((item) => {
                 const name = item.name?.[lang] || item.name?.en;
+                const itemKey = item.cartItemId || item._id;
                 return (
-                  <div key={item._id} className="cart-item glass" id={`cart-item-${item._id}`}>
+                  <div key={itemKey} className="cart-item glass" id={`cart-item-${itemKey}`}>
                     <div className="cart-item__img">
                       <img src={item.images?.[0] || '/placeholder.jpg'} alt={name} />
                     </div>
                     <div className="cart-item__info">
                       <h3 className="cart-item__name">{name}</h3>
+                      {item.selectedModel && <p style={{ fontSize: '0.85rem', color: 'var(--color-gold)' }}>Model: {item.selectedModel}</p>}
                       <p className="cart-item__price">{item.price?.toLocaleString()} MAD</p>
                     </div>
                     <div className="qty-control">
-                      <button className="qty-btn" onClick={() => updateQty(item._id, item.qty - 1)}>−</button>
+                      <button className="qty-btn" onClick={() => updateQty(itemKey, item.qty - 1)}>−</button>
                       <span className="qty-val">{item.qty}</span>
-                      <button className="qty-btn" onClick={() => updateQty(item._id, item.qty + 1)}>+</button>
+                      <button className="qty-btn" onClick={() => updateQty(itemKey, item.qty + 1)}>+</button>
                     </div>
                     <p className="cart-item__subtotal">{(item.price * item.qty).toLocaleString()} MAD</p>
-                    <button className="btn btn-danger cart-item__remove" onClick={() => removeFromCart(item._id)}>
+                    <button className="btn btn-danger cart-item__remove" onClick={() => removeFromCart(itemKey)}>
                       ✕
                     </button>
                   </div>

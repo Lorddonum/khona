@@ -12,7 +12,7 @@ router.post('/create-session', async (req, res) => {
       price_data: {
         currency: 'mad',
         product_data: {
-          name: item.name,
+          name: item.selectedModel ? `${item.name} - ${item.selectedModel}` : item.name,
           images: item.image ? [item.image.startsWith('http') ? item.image : `${process.env.CLIENT_URL}${item.image}`] : [],
         },
         unit_amount: Math.round(item.price * 100),
