@@ -22,13 +22,14 @@ export default function Cart() {
     }
     try {
       const items = cartItems.map((i) => ({
-        _id: i._id,
+        product: i._id,
         name: i.name?.[lang] || i.name?.en,
         price: i.price,
         quantity: i.qty,
         image: i.images?.[0] || '',
       }));
-      const res = await createCheckoutSession({ items });
+      const customer = { name: user.name, email: user.email };
+      const res = await createCheckoutSession({ items, customer });
       window.location.href = res.data.url;
     } catch (err) {
       alert('Checkout error: ' + err.message);
