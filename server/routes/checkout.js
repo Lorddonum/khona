@@ -10,7 +10,7 @@ router.post('/create-session', async (req, res) => {
 
     const lineItems = items.map((item) => ({
       price_data: {
-        currency: 'usd',
+        currency: 'mad',
         product_data: {
           name: item.name,
           images: item.image ? [item.image] : [],

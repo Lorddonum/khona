@@ -8,10 +8,10 @@ import './AdminDashboard.css';
 /* ===== Sidebar ===== */
 function AdminSidebar({ onLogout }) {
   const links = [
-    { to: 'products', label: 'Products', icon: '◈' },
-    { to: 'categories', label: 'Categories', icon: '◉' },
-    { to: 'orders', label: 'Orders', icon: '◎' },
-    { to: 'messages', label: 'Messages', icon: '◇' },
+    { to: '/khona-admin-secure/dashboard/products', label: 'Products', icon: '◈' },
+    { to: '/khona-admin-secure/dashboard/categories', label: 'Categories', icon: '◉' },
+    { to: '/khona-admin-secure/dashboard/orders', label: 'Orders', icon: '◎' },
+    { to: '/khona-admin-secure/dashboard/messages', label: 'Messages', icon: '◇' },
   ];
 
   return (
