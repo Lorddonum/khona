@@ -13,7 +13,7 @@ router.post('/create-session', async (req, res) => {
         currency: 'mad',
         product_data: {
           name: item.name,
-          images: item.image ? [item.image] : [],
+          images: item.image ? [item.image.startsWith('http') ? item.image : `${process.env.CLIENT_URL}${item.image}`] : [],
         },
         unit_amount: Math.round(item.price * 100),
       },
@@ -42,6 +42,7 @@ router.post('/create-session', async (req, res) => {
 
     res.json({ sessionId: session.id, url: session.url });
   } catch (err) {
+    console.error(err.stack);
     res.status(500).json({ message: err.message });
   }
 });

@@ -28,11 +28,11 @@ export default function Cart() {
         quantity: i.qty,
         image: i.images?.[0] || '',
       }));
-      const customer = { name: user.name, email: user.email };
+      const customer = { name: user.username || user.name, email: user.email };
       const res = await createCheckoutSession({ items, customer });
       window.location.href = res.data.url;
     } catch (err) {
-      alert('Checkout error: ' + err.message);
+      alert('Checkout error: ' + (err.response?.data?.message || err.message));
     }
   };
 
