@@ -63,14 +63,14 @@ export default function Cart() {
                     </div>
                     <div className="cart-item__info">
                       <h3 className="cart-item__name">{name}</h3>
-                      <p className="cart-item__price">{item.price?.toLocaleString()} DA</p>
+                      <p className="cart-item__price">{item.price?.toLocaleString()} MAD</p>
                     </div>
                     <div className="qty-control">
                       <button className="qty-btn" onClick={() => updateQty(item._id, item.qty - 1)}>−</button>
                       <span className="qty-val">{item.qty}</span>
                       <button className="qty-btn" onClick={() => updateQty(item._id, item.qty + 1)}>+</button>
                     </div>
-                    <p className="cart-item__subtotal">{(item.price * item.qty).toLocaleString()} DA</p>
+                    <p className="cart-item__subtotal">{(item.price * item.qty).toLocaleString()} MAD</p>
                     <button className="btn btn-danger cart-item__remove" onClick={() => removeFromCart(item._id)}>
                       ✕
                     </button>
@@ -82,7 +82,7 @@ export default function Cart() {
             <div className="cart-summary glass">
               <h3 className="cart-summary__title">{t('cart.subtotal')}</h3>
               <div className="divider" />
-              <p className="cart-summary__total">{totalPrice.toLocaleString()} DA</p>
+              <p className="cart-summary__total">{totalPrice.toLocaleString()} MAD</p>
 
               {/* Auth nudge — shown only when not logged in */}
               {!user && (

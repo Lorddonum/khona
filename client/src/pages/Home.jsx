@@ -5,9 +5,31 @@ import ProductCard from '../components/ProductCard';
 import { getProducts, submitContact } from '../lib/api';
 import './Home.css';
 
+function MinimalProductCard({ product }) {
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+  const name = product.name?.[lang] || product.name?.en || product.title || 'Unnamed';
+  
+  return (
+    <div className="product-card minimal-card">
+      <Link to={`/products/${product._id}`} className="product-card__img-wrap">
+        <img src={product.images?.[0] || '/placeholder.jpg'} alt={name} className="product-card__img" />
+      </Link>
+      <div className="product-card__info" style={{ textAlign: 'center', padding: '1rem' }}>
+        <Link to={`/products/${product._id}`}>
+          <h3 className="product-card__name" style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{name}</h3>
+        </Link>
+        <p className="product-card__price">{product.price?.toLocaleString()} MAD</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { t } = useTranslation();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
+  const [hotProducts, setHotProducts] = useState([]);
+  const [promoProducts, setPromoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [formStatus, setFormStatus] = useState(null);
@@ -44,9 +66,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    getProducts({ featured: true, limit: 6 })
-      .then((res) => setFeaturedProducts(res.data.products))
-      .catch(() => setFeaturedProducts([]))
+    Promise.all([
+      getProducts({ isNew: true, limit: 4 }),
+      getProducts({ isHotSelling: true, limit: 4 }),
+      getProducts({ promotion: true, limit: 4 })
+    ])
+      .then(([newRes, hotRes, promoRes]) => {
+        setNewProducts(newRes.data.products);
+        setHotProducts(hotRes.data.products);
+        setPromoProducts(promoRes.data.products);
+      })
+      .catch(() => {
+        setNewProducts([]);
+        setHotProducts([]);
+        setPromoProducts([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -140,34 +174,53 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="section home-featured" id="featured-section">
+      {/* Product Categories */}
+      <section className="section home-products" id="featured-section">
         <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">{t('home.featured_subtitle')}</span>
-            <h2 className="section-title">{t('home.featured_title')}</h2>
-            <div className="divider" />
-          </div>
-
           {loading ? (
             <div className="page-loader"><div className="spinner" /></div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid-auto">
-              {featuredProducts.map((p) => (
-                <ProductCard key={p._id} product={p} />
-              ))}
-            </div>
           ) : (
-            <div className="home-featured__empty-wrap">
-              <p className="home-featured__empty">{t('products.no_products')}</p>
-            </div>
-          )}
+            <>
+              {/* New Products */}
+              {newProducts.length > 0 && (
+                <div className="home-product-row">
+                  <div className="section-header" style={{ marginBottom: '2rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>New Arrivals</h2>
+                    <Link to="/products?tag=new" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>View all New →</Link>
+                  </div>
+                  <div className="grid-auto">
+                    {newProducts.map((p) => <MinimalProductCard key={p._id} product={p} />)}
+                  </div>
+                </div>
+              )}
 
-          <div className="home-featured__cta">
-            <Link to="/products" className="btn btn-outline" id="view-all-btn">
-              {t('products.title')} →
-            </Link>
-          </div>
+              {/* Hot Selling */}
+              {hotProducts.length > 0 && (
+                <div className="home-product-row" style={{ marginTop: '4rem' }}>
+                  <div className="section-header" style={{ marginBottom: '2rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>Hot Selling</h2>
+                    <Link to="/products?tag=hot" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>View all Hot →</Link>
+                  </div>
+                  <div className="grid-auto">
+                    {hotProducts.map((p) => <MinimalProductCard key={p._id} product={p} />)}
+                  </div>
+                </div>
+              )}
+
+              {/* Promotions */}
+              {promoProducts.length > 0 && (
+                <div className="home-product-row" style={{ marginTop: '4rem' }}>
+                  <div className="section-header" style={{ marginBottom: '2rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>Promotions</h2>
+                    <Link to="/products?tag=promo" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>View all Promos →</Link>
+                  </div>
+                  <div className="grid-auto">
+                    {promoProducts.map((p) => <MinimalProductCard key={p._id} product={p} />)}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
 

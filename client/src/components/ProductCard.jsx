@@ -35,7 +35,7 @@ export default function ProductCard({ product }) {
         <Link to={`/products/${product._id}`}>
           <h3 className="product-card__name">{name}</h3>
         </Link>
-        <p className="product-card__price">${product.price?.toLocaleString()}</p>
+        <p className="product-card__price">{product.price?.toLocaleString()} MAD</p>
 
         <div className="product-card__actions">
           <button

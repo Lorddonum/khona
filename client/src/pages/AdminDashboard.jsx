@@ -187,7 +187,7 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
           <p className="product-form__section-title">Details</p>
           <div className="product-form__row-3">
             <div className="form-group">
-              <label className="form-label">Price (DA)</label>
+              <label className="form-label">Price (MAD)</label>
               <input className="form-input" type="number" name="price" value={form.price} onChange={handleChange} placeholder="0.00" min="0" step="0.01" required />
             </div>
             <div className="form-group">
@@ -231,7 +231,7 @@ function ProductFormModal({ categories, onClose, onSaved, initialData = null }) 
           <div className="spec-rows">
             {specs.map((s, i) => (
               <div className="spec-row" key={i}>
-                <input className="form-input" placeholder="Key (e.g. Wattage)" value={s.key} onChange={(e) => updateSpec(i, 'key', e.target.value)} />
+                <input className="form-input" placeholder="Name (e.g. Wattage)" value={s.key} onChange={(e) => updateSpec(i, 'key', e.target.value)} />
                 <input className="form-input" placeholder="Value (e.g. 60W)" value={s.value} onChange={(e) => updateSpec(i, 'value', e.target.value)} />
                 <button type="button" className="spec-row__remove" onClick={() => removeSpec(i)}>×</button>
               </div>
@@ -394,7 +394,7 @@ function AdminProducts() {
                   </td>
                   <td>{p.name?.en || p.name?.fr}</td>
                   <td>{p.category?.name?.fr || p.category?.name?.en || '—'}</td>
-                  <td className="admin-table__price">{Number(p.price).toLocaleString()} DA</td>
+                  <td className="admin-table__price">{Number(p.price).toLocaleString()} MAD</td>
                   <td>
                     <span className={`badge ${p.quantity > 0 ? 'badge-green' : 'badge-red'}`}>
                       {p.quantity}
@@ -508,7 +508,7 @@ function AdminOrders() {
                 <tr key={o._id}>
                   <td>{o.customer?.name}</td>
                   <td>{o.customer?.email}</td>
-                  <td className="admin-table__price">${o.totalAmount?.toLocaleString()}</td>
+                  <td className="admin-table__price">{o.totalAmount?.toLocaleString()} MAD</td>
                   <td>
                     <select
                       className="admin-status-select"

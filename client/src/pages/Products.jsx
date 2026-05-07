@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from '../components/ProductCard';
 import { getProducts, getCategories, getProduct } from '../lib/api';
@@ -10,8 +10,12 @@ export default function Products() {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const lang = i18n.language;
+
+  const searchParams = new URLSearchParams(location.search);
+  const tagParam = searchParams.get('tag');
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -32,14 +36,20 @@ export default function Products() {
   useEffect(() => {
     if (id) return; // detail view handles its own data
     setLoading(true);
-    getProducts({ category: selectedCat || undefined, search: search || undefined, page, limit: 12 })
+    
+    const params = { category: selectedCat || undefined, search: search || undefined, page, limit: 12 };
+    if (tagParam === 'new') params.isNew = true;
+    if (tagParam === 'hot') params.isHotSelling = true;
+    if (tagParam === 'promo') params.promotion = true;
+
+    getProducts(params)
       .then((r) => {
         setProducts(r.data.products);
         setPages(r.data.pages);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCat, search, page, id]);
+  }, [selectedCat, search, page, id, tagParam]);
 
   // Detail view
   useEffect(() => {
@@ -91,7 +101,7 @@ export default function Products() {
             <div className="product-detail__info">
               <div className="badge badge-gold">{detail.category?.name?.[lang]}</div>
               <h1 className="product-detail__name">{name}</h1>
-              <p className="product-detail__price">${detail.price?.toLocaleString()}</p>
+              <p className="product-detail__price">{detail.price?.toLocaleString()} MAD</p>
               <div className="divider" />
               {desc && <p className="product-detail__desc">{desc}</p>}
 
@@ -129,8 +139,18 @@ export default function Products() {
     <main className="products-page" style={{ paddingTop: '100px' }}>
       <div className="container">
         <div className="products-page__header">
-          <h1 className="section-title">{t('products.title')}</h1>
+          <h1 className="section-title">
+            {tagParam === 'new' ? 'New Arrivals' :
+             tagParam === 'hot' ? 'Hot Selling' :
+             tagParam === 'promo' ? 'Promotions' :
+             t('products.title')}
+          </h1>
           <p className="section-subtitle">{t('products.subtitle')}</p>
+          {tagParam && (
+            <button className="btn btn-ghost" onClick={() => navigate('/products')} style={{ marginTop: '1rem' }}>
+              Clear Filter ✕
+            </button>
+          )}
         </div>
 
         <div className="products-page__layout">
